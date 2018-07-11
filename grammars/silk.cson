@@ -1,0 +1,106 @@
+# TextMate tutorial: http://manual.macromates.com/en/language_grammars
+
+# Regex to convert keys to unquoted: '(include|match|captures|begin|end|beginCaptures|endCaptures|name|patterns|0|1|2|3|4|5|6|7|8|9|comment|fileTypes|scopeName|repository|contentName|firstLineMatch|foldingStartMarker|foldingStopMarker)':
+
+scopeName: 'source.silk'
+name: 'Silk'
+fileTypes: [
+  'silk'
+]
+foldingStartMarker: /[\<\{\[]/
+foldingStopMarker: /[\>\}\]]/
+patterns: [
+  {include: '#value'}
+]
+repository: # An array of rules. If you're going to be referencing one bit of code over and over again, stick it here so that you can edit all in one place.
+
+  value:{
+    name:'value'
+    patterns:[
+      {name:'vstring', include: '#string'}
+      {include: '#symbol'}
+      {include: '#number'}
+      {include: '#comment'}
+      {include: '#reference'}
+      {include: '#portal'}
+      {include: '#construct'}
+      {include: '#chain'}
+      {include: '#visor'}
+    ]
+  }
+
+  construct:{
+    begin: '\\{(.*\\|)?',
+    end:'(\\|.*)?\\}'
+    name: 'construct'
+    beginCaptures:
+      0: patterns: [{include: '#symbol'}]
+    endCaptures:
+      0: patterns: [{include: '#symbol'}]
+
+    patterns: [
+      include:'#value'
+    ]
+  }
+
+  visor:{
+    begin: '<'
+    end: '>'
+    name: 'visor'
+  }
+
+  chain:{
+    begin: '\\['
+    end: '\\]'
+    name: 'chain'
+    patterns: [
+      include: '#value'
+    ]
+  }
+
+  symbol:{
+    match: '[a-zA-Z]+'
+    name: 'variable'
+  }
+
+  comment:{
+    match:'%.*$',
+    name: 'comment.line.percentage'
+  }
+
+  reference:{
+    match: '/(?:[a-zA-Z]+|\\*)'
+    name: 'support.class'
+  }
+
+  portal:{
+    match: '[a-z]*~[a-z]*'
+    name: 'constant'
+  }
+
+  string:{
+    begin: '"',
+    end: '"',
+    name: 'string'
+    patterns:[
+      {
+        name: 'string.template.field'
+        match:'\\^\\((.*)\\)'
+        captures:{
+          0 : patterns: [{include:'#value'}]
+        }
+      },
+      {
+        name: 'string.template.field'
+        match:'(\\^)([\\w]*)[^\\w]'
+        captures:
+          0 : name: 'template.token.identifier'
+          1 : name: 'identifier'
+      }
+    ]
+  }
+
+  number:{
+    match: '[0-9]+(:?.[0-9]+)?',
+    name:'number'
+  }

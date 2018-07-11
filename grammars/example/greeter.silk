@@ -1,0 +1,9 @@
+|= /silk/*
+
+greeter = [
+  "what is your name? " %just a string
+  /ask
+  /init
+  "Hello ^(~)"
+  /print
+]

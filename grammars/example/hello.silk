@@ -1,0 +1,7 @@
+|= /silk/*
+
+hello = [
+  "hello world"
+  /init  %pull the string and push to the standard output
+  /print
+]
