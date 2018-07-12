@@ -10,29 +10,78 @@ fileTypes: [
 foldingStartMarker: /[\<\{\[]/
 foldingStopMarker: /[\>\}\]]/
 patterns: [
-  {include: '#value'}
+  {include: '#comment'}
+  {include: '#import'}
+  {include: '#declaration'}
 ]
 repository: # An array of rules. If you're going to be referencing one bit of code over and over again, stick it here so that you can edit all in one place.
+
+  comment:{
+    match:'%.*$',
+    name: 'comment.line.percentage'
+  }
+
+  import:{
+    match:'([a-zA-Z_\\$]*)\\s*(<=|\\|=)\\s*([a-zA-Z_\\$\\/]*)(\\/\\*)?$',
+    captures:
+      1: name: 'support.function.silk'
+      2: name: 'keyword.operator.silk'
+      3: patterns: [{include:'#alias'}]
+      4: name: 'constant.import.glob.silk'
+  }
+
+  declaration:{
+    begin:'^([a-zA-Z_\\$]*)\\s*(<=|\\|=)'
+    beginCaptures:
+      1: name: 'support.function.silk'
+      2: name: 'keyword.operator.silk'
+    end:'\\n'
+    endCaptures:
+      1: patterns: {include: '$base'}
+
+    patterns:[
+      {include: '#value'}
+    ]
+
+  }
+
+  alias:{
+    name: 'constant.alias'
+    match:'(\\/?)([a-zA-Z_\\$]*(?:\\/[a-zA-Z_\\$]+)*)'
+  }
 
   value:{
     name:'value'
     patterns:[
-      {name:'vstring', include: '#string'}
+      {include: '#string_double'}
+      {include: '#string_single'}
+      {include: '#boolean'}
       {include: '#symbol'}
       {include: '#number'}
+      {include: '#template'}
       {include: '#comment'}
       {include: '#reference'}
       {include: '#portal'}
       {include: '#construct'}
       {include: '#chain'}
       {include: '#visor'}
+      {include: '#operation'}
     ]
   }
+
+  operation:
+    begin: '(\\()'
+    end: '(\\))'
+    name: 'meta.operation'
+    patterns:[
+      {match: '\\*|\\+|\\-|\\%|\\!|\\&|\\||\\=|<=|>=|<|>|/', name: 'keyword.operator'}
+      {include: '#value'}
+    ]
 
   construct:{
     begin: '\\{(.*\\|)?',
     end:'(\\|.*)?\\}'
-    name: 'construct'
+    name: 'meta.construct'
     beginCaptures:
       0: patterns: [{include: '#symbol'}]
     endCaptures:
@@ -46,61 +95,96 @@ repository: # An array of rules. If you're going to be referencing one bit of co
   visor:{
     begin: '<'
     end: '>'
-    name: 'visor'
+    name: 'meta.visor'
+    patterns: [
+      include:'#value'
+    ]
   }
 
   chain:{
     begin: '\\['
     end: '\\]'
-    name: 'chain'
+    name: 'meta.chain'
     patterns: [
       include: '#value'
     ]
   }
 
-  symbol:{
-    match: '[a-zA-Z]+'
-    name: 'variable'
-  }
-
-  comment:{
-    match:'%.*$',
-    name: 'comment.line.percentage'
-  }
-
-  reference:{
-    match: '/(?:[a-zA-Z]+|\\*)'
-    name: 'support.class'
-  }
-
-  portal:{
-    match: '[a-z]*~[a-z]*'
-    name: 'constant'
-  }
-
-  string:{
-    begin: '"',
-    end: '"',
-    name: 'string'
-    patterns:[
-      {
-        name: 'string.template.field'
-        match:'\\^\\((.*)\\)'
-        captures:{
-          0 : patterns: [{include:'#value'}]
-        }
-      },
-      {
-        name: 'string.template.field'
-        match:'(\\^)([\\w]*)[^\\w]'
-        captures:
-          0 : name: 'template.token.identifier'
-          1 : name: 'identifier'
-      }
-    ]
+  wing:{
+    match:'([a-zA-Z_\\$]+)(?:=([a-zA-Z_\\$]+))?'
+    captures:
+      1: name: 'variable.parameter.gate.silk'
+      2: name: 'variable.parameter.gate.silk'
   }
 
   number:{
     match: '[0-9]+(:?.[0-9]+)?',
-    name:'number'
+    name:'constant.numeric.silk'
+  }
+
+  boolean:{
+    match: 'True|False|All|None'
+    name: 'constant.language.silk'
+  }
+
+  symbol:{
+    match: '[a-zA-Z\\$_]+'
+    name: 'entity.name.tag'
+  }
+
+
+  reference:{
+    match: '/(?:[a-zA-Z\\$_]+|\\*)'
+    name: 'support.function'
+  }
+
+  portal:{
+    match: '(:?[a-zA-Z_\\$]*)(~)([a-zA-Z_\\$]*)'
+    name: ''
+    captures:
+      1: 'keyword.control'
+      2: 'variable.parameter'
+  }
+
+  string_double:{
+    begin: '"',
+    end: '"',
+    name: 'string.quoted.double'
+    patterns:[
+      {include: '#string_escape'}
+      {include: '#string_field_value'}
+      {include: '#string_field'}
+    ]
+  }
+
+  string_single:{
+    begin: "'",
+    end: "'",
+    name: 'string.quoted.single'
+    patterns:[
+      {include: '#string_escape'}
+      {include: '#string_field_value'}
+      {include: '#string_field'}
+    ]
+  }
+
+  string_escape: {
+    match: '\\\\(.)'
+    name: 'constant.character.escape'
+  }
+
+  string_field_value: {
+      name: 'string.template.field'
+      match:'\\^\\((.*)\\)'
+      captures:
+        0 : patterns: [{include:'#value'}]
+
+    }
+
+  string_field: {
+    name: 'string.template.field'
+    match:'(\\^)([\\w]*)[^\\w]'
+    captures:
+      0 : name: 'template.token.identifier'
+      1 : name: 'identifier'
   }
